@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+      var socket = io.connect();
+
+      socket.on("connect", function () {
+        console.log("Connected");
+      });
+
+      // Receive from any event
+      socket.on("chatmessage", function (data) {
+        console.log(data);
+        document.getElementById("messages").innerHTML =
+          "" + data + +"" + document.getElementById("messages").innerHTML;
+      });
+
+      var sendmessage = function (message) {
+        document.getElementById("message").innerHTML =
+          "" + message + +"" + document.getElementById("message").innerHTML;
+        console.log("chatmessage: " + message);
+        socket.emit("chatmessage", message);
+
+        // 			//print message on the same page
+        // 			document.getElementById('messages').innerHTML = "" + message +
+        // + "" + document.getElementById('messages').innerHTML += data + "</br>";
+      };
+    </script>
+  </head>
+
+  <body align="center">
+    <div id="messages">
+      What color are you feeling today
+    </div>
+    <input
+      type="text"
+      id="backgroundColorInput"
+      name="message"
+      placeholder=""
+    />
+    <input
+      type="submit"
+      id="backgroundColorButton"
+      value="Enter"
+      onclick="changeColor()"
+    />
+    <script>
+      function changeColor() {
+        let color = document.getElementById("backgroundColorInput").value;
+        document.body.style.backgroundColor = color;
+      }
+    </script>
+  </body>
+</html>

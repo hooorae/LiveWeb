@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script src="p5.js"></script>
+  <!-- <script src="path/to/p5.sound.js"></script> -->
+  <script src="p5.sound.min.js"></script>
+  <!-- <script src="path/to/p5.sound.min.js"></script> -->
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8">
+
+  <!-- <script src="/socket.io/socket.io.js"></script> -->
+  <script src="https://xq476.itp.io:443/socket.io/socket.io.js"></script>
+
+  <script type="text/javascript">
+
+    // var socket = io.connect('http://localhost:8081');
+    // socket.on('connect', function () {
+    //   console.log("Connected");
+    // });
+
+    var socket;
+    var serverUri = 'https://xq476.itp.io:443';
+
+    //create a websocket client and define event handlers
+    function init() {
+      socket = io(serverUri); //connecting to the server
+      socket.on('volumes', showVolumes);
+    }
+
+    let people = [];
+    function showVolumes(message) {
+      //console.log(message);
+      people = message;
+    }
+
+    setInterval(askVolume, 3000);
+    function askVolume() {
+      socket.emit('askVolume');
+    }
+
+    function updateMyVolume() {
+      socket.emit('updateVolume', myID, myVolume);
+    }
+
+    window.addEventListener("load", init, false);
+
+
+
+
+    window.addEventListener('load', function () {
+
+      let audio = document.getElementById('theaudio');
+
+
+      let constraints = { audio: true, video: false }
+      navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+        var audioContext = new AudioContext();
+        var audioSource = audioContext.createMediaStreamSource(stream);
+      })
+        .catch(function (err) {
+          alert(err);
+        });
+
+    });
+
+
+
+
+
+
+
+    //p5
+    let pallete = ["#F38181", "#FCE38A", "#EAFFD0", "#F8B623", "#a1bad0", "#737495", "#68a8ad"];
+    let sep = 3;
+    let rs;
+    let mic;
+    let textStart = false;
+
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      colorMode(HSB, 360, 100, 100, 100);
+      // rs = random(10000);
+
+      mic = new p5.AudioIn();
+      mic.start();
+
+      startButton();
+
+    }
+
+    function draw() {
+      background(200);
+      randomSeed(rs);
+
+audioDraw();
+      //generating text rolling effect
+      if (textStart = true){
+            if (frameCount < 200) {
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('Welcome to group meditation room', width/2, height/2); 
+                pop();
+              }  else if (frameCount > 201 && frameCount <= 400) {
+                audioDraw();
+                // clear();
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('Lets breath together', width/2, height/2);
+                pop();
+              }else if (frameCount > 401 && frameCount <= 500) {
+                audioDraw();
+                // clear();
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('Starting in...', width/2, height/2);
+                pop();
+              }else if (frameCount > 501 && frameCount <= 600) {
+                audioDraw();
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('3...2...1...', width/2, height/2);
+                pop();
+              }else if (frameCount > 601 && frameCount <= 900) {
+                audioDraw();
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('Breath in.......', width/2, height/2);
+                pop();
+              }else if (frameCount > 901 && frameCount <= 1200) {
+                audioDraw();
+                push();
+                textAlign(CENTER);
+                fill(0);
+                textStyle(NORMAL);
+                textSize(20);
+                text('Breath out.......', width/2, height/2);
+                pop();
+              }
+  
+          else{
+            audioDraw();
+            push();
+            // background(255);
+            textAlign(CENTER);
+            fill(0);
+            textStyle(NORMAL);
+            textSize(20);
+            text('Keep breathing, you are doing good', width/2, height/2);
+            console.log(frameCount);
+            pop(); }
+              }
+
+      //audioDraw();
+
+      socket.emit('updateVolume', { id: socket.id, volume: rs })
+
+
+    }
+
+    // function mousePressed() {
+    //   userStartAudio();
+    //   console.log("my id is: " + socket.id);
+    //   console.log( people);
+    // }
+
+    function startButton() {
+      button = createButton("Click");
+      //button.position(width / 2, height - 100);
+      button.position(width/2-50,height-100);
+      button.mouseClicked(userStartAudio);
+      console.log('button is here');
+      textStart == true;
+    }
+
+    function audioDraw(){
+      micLevel = mic.getLevel();
+      rs = micLevel * 5
+
+      drawingContext.shadowColor = color(0, 0, 0);
+      drawingContext.shadowBlur = 100;
+      drawingContext.shadowOffsetY = 50;
+      drawingContext.shadowOffsetX = 0;
+
+      //for (let y = -height / 2; y < height; y += height / people.length) {
+      let c1 = random(pallete);
+      let c2 = random(pallete);
+      let c3 = random(pallete);
+      while (c1 == c2 || c2 == c3 || c3 == c1) {
+        c1 = random(pallete);
+        c2 = random(pallete);
+        c3 = random(pallete);
+      }
+      let gradient = drawingContext.createLinearGradient(0, 0, width, 0);
+
+      gradient.addColorStop(0.0, c1);
+      gradient.addColorStop(random(0.3, 0.7), c2);
+      gradient.addColorStop(1.0, c3);
+
+
+      drawingContext.fillStyle = gradient;
+      noStroke();
+      for (let i = 0; i < people.length; i++) {
+        let y = height / people.length * (i + .5);
+        beginShape();
+        for (let x = -200; x <= width + 200; x += 3) {
+          let yy = y + map(noise(people[i].volume + y, x / 500, frameCount / 300), 0, 1, -height / sep, height / sep);
+          vertex(x, yy);
+        }
+        vertex(width + 200, height);
+        vertex(0 - 200, height);
+        endShape();
+      }
+    }
+
+
+
+
+
+
+
+
+  </script>
+
+</head>
+
+<body>
+
+
+</body>
+
+</html>
